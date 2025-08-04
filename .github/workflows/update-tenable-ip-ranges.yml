@@ -42,7 +42,7 @@ jobs:
           echo "_Last updated: $(date -u +'%Y-%m-%dT%H:%M:%SZ')_" >> docs/tenable-ip-prefixes.md
           echo "" >> docs/tenable-ip-prefixes.md
 
-          jq -r '.prefixes[].ip_prefix' data.json | sort | uniq | sed 's/^/- /' >> docs/tenable-ip-prefixes.md || {
+          jq -r '.prefixes[].ip_prefix' data.json | sort | uniq >> docs/tenable-ip-prefixes.md || {
             echo "❌ Failed to parse and write IP prefixes."
             exit 1
           }
