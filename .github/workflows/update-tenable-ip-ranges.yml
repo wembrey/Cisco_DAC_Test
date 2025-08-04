@@ -15,12 +15,23 @@ jobs:
 
       - name: Fetch and format Tenable IP prefixes
         run: |
-          curl -s https://docs.tenable.com/ip-ranges/data.json > data.json
+          echo "Fetching Tenable IP ranges JSON..."
+          curl -s https://docs.tenable.com/ip-ranges/data.json -o data.json
+
+          echo "Preview of downloaded JSON:"
+          head -n 20 data.json || echo "Could not preview JSON"
+
           echo "# Tenable IP Prefixes" > docs/tenable-ip-prefixes.md
           echo "" >> docs/tenable-ip-prefixes.md
           echo "_Last updated: $(date -u +'%Y-%m-%dT%H:%M:%SZ')_" >> docs/tenable-ip-prefixes.md
           echo "" >> docs/tenable-ip-prefixes.md
-          jq -r '.prefixes[].ip_prefix' data.json | sort | uniq | sed 's/^/- /' >> docs/tenable-ip-prefixes.md
+
+          if jq -e '.prefixes' data.json > /dev/null; then
+            jq -r '.prefixes[].ip_prefix' data.json | sort | uniq | sed 's/^/- /' >> docs/tenable-ip-prefixes.md
+          else
+            echo "**Error: 'prefixes' field not found in JSON**" >> docs/tenable-ip-prefixes.md
+            exit 1
+          fi
 
       - name: Commit changes
         run: |
@@ -29,3 +40,4 @@ jobs:
           git add docs/tenable-ip-prefixes.md
           git commit -m "Daily update of Tenable IP prefixes"
           git push
+
