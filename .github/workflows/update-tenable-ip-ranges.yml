@@ -37,15 +37,15 @@ jobs:
 
           # Write each IP prefix on its own line using printf
           jq -r '.prefixes[].ip_prefix' data.json | sort | uniq | while read ip; do
-            printf "%s\n" "$ip" >> tenable-ip-prefixes.md
+            printf "%s\n" "$ip" >> tenable-ip-prefixes.ips
           done
 
-          echo "✅ IP prefixes written to tenable-ip-prefixes.md"
+          echo "✅ IP prefixes written to tenable-ip-prefixes.ips"
 
       - name: Commit changes
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add tenable-ip-prefixes.md
+          git add tenable-ip-prefixes.ips
           git commit -m "Daily update of Tenable IP prefixes" || echo "No changes to commit."
           git push
