@@ -1,4 +1,4 @@
-name: Update Tenable IP Ranges
+name: Update Tenable IP Prefixes
 
 on:
   schedule:
@@ -6,41 +6,26 @@ on:
   workflow_dispatch:
 
 jobs:
-  update-ip-ranges:
+  update-ip-prefixes:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Fetch and update Tenable IP ranges
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const url = "https://docs.tenable.com/ip-ranges/data.json";
-            const response = await fetch(url);
-            const json = await response.json();
-
-            const fs = require('fs');
-            const path = 'docs/tenable-ip-ranges.md';
-
-            let output = `# Tenable IP Ranges\n\n_Last updated: ${new Date().toISOString()}_\n\n`;
-
-            for (const region of json.regions) {
-              output += `## ${region.region}\n`;
-              for (const range of region.cidrs) {
-                output += `- ${range}\n`;
-              }
-              output += `\n`;
-            }
-
-            fs.writeFileSync(path, output);
+      - name: Fetch and format Tenable IP prefixes
+        run: |
+          curl -s https://docs.tenable.com/ip-ranges/data.json > data.json
+          echo "# Tenable IP Prefixes" > docs/tenable-ip-prefixes.md
+          echo "" >> docs/tenable-ip-prefixes.md
+          echo "_Last updated: $(date -u +'%Y-%m-%dT%H:%M:%SZ')_" >> docs/tenable-ip-prefixes.md
+          echo "" >> docs/tenable-ip-prefixes.md
+          jq -r '.prefixes[].ip_prefix' data.json | sort | uniq | sed 's/^/- /' >> docs/tenable-ip-prefixes.md
 
       - name: Commit changes
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/tenable-ip-ranges.md
-          git commit -m "Daily update of Tenable IP ranges"
+          git add docs/tenable-ip-prefixes.md
+          git commit -m "Daily update of Tenable IP prefixes"
           git push
