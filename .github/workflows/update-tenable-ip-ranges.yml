@@ -40,7 +40,7 @@ jobs:
           echo "" >> tenable-ip-prefixes.md
 
           # Write each IP prefix on its own line
-          jq -r '.prefixes[].ip_prefix' data.json | sort | uniq | while read ip; do
+          jq -r '.prefixes[].ip_prefix' data.json | sort | uniq | while IFS= read -r ip; do
             echo "$ip" >> tenable-ip-prefixes.md
           done
 
@@ -53,4 +53,3 @@ jobs:
           git add tenable-ip-prefixes.md
           git commit -m "Daily update of Tenable IP prefixes" || echo "No changes to commit."
           git push
-
