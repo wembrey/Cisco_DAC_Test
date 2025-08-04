@@ -1,6 +1,6 @@
 # Tenable IP Prefixes
 
-_Last updated: 2025-08-04T16:45:39Z_
+_Last updated: 2025-08-04T16:52:18Z_
 
 13.115.104.128/25
 13.210.1.64/26
