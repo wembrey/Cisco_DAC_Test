@@ -28,6 +28,10 @@ jobs:
       - name: Parse and format IP prefixes
         run: |
           echo "Parsing IP prefixes..."
+
+          # Create docs folder if it doesn't exist
+          mkdir -p docs
+
           if ! jq -e '.prefixes' data.json > /dev/null; then
             echo "❌ 'prefixes' field not found in JSON."
             exit 1
@@ -52,4 +56,3 @@ jobs:
           git add docs/tenable-ip-prefixes.md
           git commit -m "Daily update of Tenable IP prefixes" || echo "No changes to commit."
           git push
-
