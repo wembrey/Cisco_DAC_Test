@@ -34,10 +34,6 @@ jobs:
             exit 1
           fi
 
-          echo "# Tenable IP Prefixes" > tenable-ip-prefixes.md
-          echo "" >> tenable-ip-prefixes.md
-          echo "_Last updated: $(date -u +'%Y-%m-%dT%H:%M:%SZ')_" >> tenable-ip-prefixes.md
-          echo "" >> tenable-ip-prefixes.md
 
           # Write each IP prefix on its own line using printf
           jq -r '.prefixes[].ip_prefix' data.json | sort | uniq | while read ip; do
