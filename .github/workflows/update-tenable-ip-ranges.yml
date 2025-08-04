@@ -13,31 +13,43 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Fetch and format Tenable IP prefixes
+      - name: Fetch Tenable IP ranges JSON
         run: |
-          echo "Fetching Tenable IP ranges JSON..."
-          curl -s https://docs.tenable.com/ip-ranges/data.json -o data.json
+          echo "Downloading JSON from Tenable..."
+          curl -sSf https://docs.tenable.com/ip-ranges/data.json -o data.json || {
+            echo "❌ Failed to download JSON from Tenable."
+            exit 1
+          }
 
-          echo "Preview of downloaded JSON:"
+          echo "✅ JSON downloaded successfully."
+          echo "Preview of JSON:"
           head -n 20 data.json || echo "Could not preview JSON"
+
+      - name: Parse and format IP prefixes
+        run: |
+          echo "Parsing IP prefixes..."
+          if ! jq -e '.prefixes' data.json > /dev/null; then
+            echo "❌ 'prefixes' field not found in JSON."
+            exit 1
+          fi
 
           echo "# Tenable IP Prefixes" > docs/tenable-ip-prefixes.md
           echo "" >> docs/tenable-ip-prefixes.md
           echo "_Last updated: $(date -u +'%Y-%m-%dT%H:%M:%SZ')_" >> docs/tenable-ip-prefixes.md
           echo "" >> docs/tenable-ip-prefixes.md
 
-          if jq -e '.prefixes' data.json > /dev/null; then
-            jq -r '.prefixes[].ip_prefix' data.json | sort | uniq | sed 's/^/- /' >> docs/tenable-ip-prefixes.md
-          else
-            echo "**Error: 'prefixes' field not found in JSON**" >> docs/tenable-ip-prefixes.md
+          jq -r '.prefixes[].ip_prefix' data.json | sort | uniq | sed 's/^/- /' >> docs/tenable-ip-prefixes.md || {
+            echo "❌ Failed to parse and write IP prefixes."
             exit 1
-          fi
+          }
+
+          echo "✅ IP prefixes written to docs/tenable-ip-prefixes.md"
 
       - name: Commit changes
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add docs/tenable-ip-prefixes.md
-          git commit -m "Daily update of Tenable IP prefixes"
+          git commit -m "Daily update of Tenable IP prefixes" || echo "No changes to commit."
           git push
 
