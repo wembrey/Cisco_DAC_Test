@@ -1,0 +1,46 @@
+name: Update Tenable IP Ranges
+
+on:
+  schedule:
+    - cron: '0 7 * * *' # Daily at 7 AM UTC
+  workflow_dispatch:
+
+jobs:
+  update-ip-ranges:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Fetch and update Tenable IP ranges
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const url = "https://docs.tenable.com/ip-ranges/data.json";
+            const response = await fetch(url);
+            const json = await response.json();
+
+            const fs = require('fs');
+            const path = 'docs/tenable-ip-ranges.md';
+
+            let output = `# Tenable IP Ranges\n\n_Last updated: ${new Date().toISOString()}_\n\n`;
+
+            for (const region of json.regions) {
+              output += `## ${region.region}\n`;
+              for (const range of region.cidrs) {
+                output += `- ${range}\n`;
+              }
+              output += `\n`;
+            }
+
+            fs.writeFileSync(path, output);
+
+      - name: Commit changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/tenable-ip-ranges.md
+          git commit -m "Daily update of Tenable IP ranges"
+          git push
