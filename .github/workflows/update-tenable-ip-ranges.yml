@@ -39,10 +39,10 @@ jobs:
           echo "_Last updated: $(date -u +'%Y-%m-%dT%H:%M:%SZ')_" >> tenable-ip-prefixes.md
           echo "" >> tenable-ip-prefixes.md
 
-          jq -r '.prefixes[].ip_prefix' data.json | sort | uniq >> tenable-ip-prefixes.md || {
-            echo "❌ Failed to parse and write IP prefixes."
-            exit 1
-          }
+          # Write each IP prefix on its own line
+          jq -r '.prefixes[].ip_prefix' data.json | sort | uniq | while read ip; do
+            echo "$ip" >> tenable-ip-prefixes.md
+          done
 
           echo "✅ IP prefixes written to tenable-ip-prefixes.md"
 
@@ -53,3 +53,4 @@ jobs:
           git add tenable-ip-prefixes.md
           git commit -m "Daily update of Tenable IP prefixes" || echo "No changes to commit."
           git push
+
